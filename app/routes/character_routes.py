@@ -1,3 +1,4 @@
+from urllib import response
 from flask import Blueprint, request, abort, make_response
 from ..db import db
 from ..models.character import Character
@@ -50,6 +51,10 @@ def get_greetings(char_id):
 
 @bp.post("/<char_id>/generate")
 def add_greetings(char_id):
+    # character = validate_model(Character, char_id)
+    # generate_greetings(character)
+
+    # return character.to_dict()
     character_obj = validate_model(Character, char_id)
 
     if character_obj.greetings:
@@ -68,6 +73,8 @@ def add_greetings(char_id):
 
     db.session.add_all(new_greetings)
     db.session.commit()
+    print(f'greetings:{new_greetings}')
+    print(type(new_greetings[0]))
 
     return {"message": f"Greetings successfully added to {character_obj.name}"}, 201
 
@@ -77,7 +84,10 @@ def generate_greetings(character):
     response = client.models.generate_content(
         model="gemini-2.5-flash", contents=input_message
     )
-    print(response.text)
+    lines = response.text.splitlines()
+
+    # Strip leading and trailing quotes and commas from each greeting
+    return [line.strip("\"',") for line in lines]
 
 def validate_model(cls, id):
     try:
